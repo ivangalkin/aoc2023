@@ -5,8 +5,8 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_executable(aoc2023
 #        01.cpp
-        02.cpp
-#        03.cpp
+#        02.cpp
+        03.cpp
 #        04.cpp
 #        05.cpp
 #        06.cpp
