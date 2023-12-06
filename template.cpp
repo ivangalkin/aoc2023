@@ -3,6 +3,7 @@
 #include <array>
 #include <set>
 #include <iomanip>
+#include <sstream>
 #include <map>
 #include <tuple>
 #include <numeric>
