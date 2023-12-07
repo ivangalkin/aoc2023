@@ -1278,7 +1278,7 @@ namespace {
     }
 }
 
-int main() {
+int main07() {
     sort1(input_test);
     sort1(input_real);
     ASSERT_EQ(calculate_winnings(input_test), 6440);
