@@ -13,8 +13,8 @@ add_executable(aoc2023
 #        07.cpp
 #        08.cpp
 #        09.cpp
-        10.cpp
-#        11.cpp
+#        10.cpp
+        11.cpp
 #        12.cpp
 #        13.cpp
 #        14.cpp
