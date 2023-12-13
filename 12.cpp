@@ -1452,86 +1452,86 @@ if (!validate_group((idx))) {                                                   
         return result;
     }
 
-    ll get_combinations2(std::string s, const std::vector<ll> &expected) {
+    std::map<PoolWork, ll> memory_remaining_to_combinations;
 
-        // remaining string -> remaining groups
-        std::vector<PoolWork> pool;
-        pool.push_back({s, expected});
-
+    ll get_combinations2(std::string remaining_string, std::vector<ll> remaining_groups) {
         ll counter = 0;
-
-        while (!pool.empty()) {
-            auto [remaining_string, remaining_groups] = pool.back();
-            pool.pop_back();
-
-            if (remaining_groups.empty()) {
-                if (remaining_string.empty() ||
-                    std::all_of(remaining_string.begin(), remaining_string.end(), [](char c) {
-                        return c == '.' || c == '?';
-                    })) {
-                    counter++;
-                }
-                continue;
-            }
-
-            if (remaining_string.size() < std::accumulate(remaining_groups.begin(), remaining_groups.end(), 0ll)) {
-                continue;
-            }
-
-            remaining_string = strip_dots(remaining_string);
-            if (remaining_string.empty()) {
-                continue;
-            }
-
-            // if remaining string starts with ? - we cannot check the group matching
-            // we build two substitutes
-            if (remaining_string.starts_with('?')) {
-                remaining_string.erase(remaining_string.begin());
-
-                PoolWork first{"#" + remaining_string, remaining_groups};
-                PoolWork second{remaining_string, remaining_groups};
-
-                pool.push_back(std::move(second));
-                pool.push_back(std::move(first));
-                continue;
-            }
-
-            // if remaining string starts with # - let's try to match the group
-            auto first_remaining_group = remaining_groups.front();
-            remaining_groups.erase(remaining_groups.begin());
-
-            if (remaining_string.size() < first_remaining_group) {
-                continue;
-            }
-
-            bool matched = true;
-            if ((remaining_string.size() == first_remaining_group) ||
-                (remaining_string.size() > first_remaining_group &&
-                 (remaining_string.at(first_remaining_group) == '.') ||
-                 (remaining_string.at(first_remaining_group) == '?'))) {
-                for (ll i = 0; i < first_remaining_group; i++) {
-                    if (remaining_string.at(i) != '#' && remaining_string.at(i) != '?') {
-                        matched = false;
-                        break;
-                    }
-                }
+        auto process_new_item = [&counter](PoolWork new_item) {
+            if (auto memory_it = memory_remaining_to_combinations.find(new_item); memory_it !=
+                                                                                  memory_remaining_to_combinations.end()) {
+                counter += memory_it->second;
             } else {
-                matched = false;
+                auto calculated = get_combinations2(std::get<0>(new_item), std::get<1>(new_item));
+                memory_remaining_to_combinations[new_item] = calculated;
+                counter += calculated;
             }
+        };
 
-            if (matched) {
-                if (remaining_string.size() > first_remaining_group) {
-                    PoolWork new_item{remaining_string.substr(first_remaining_group + 1), remaining_groups};
-                    pool.push_back(std::move(new_item));
-                } else {
-                    PoolWork new_item{remaining_string.substr(first_remaining_group), remaining_groups};
-                    pool.push_back(std::move(new_item));
-                }
+        if (remaining_groups.empty()) {
+            if (remaining_string.empty() ||
+                std::all_of(remaining_string.begin(), remaining_string.end(), [](char c) {
+                    return c == '.' || c == '?';
+                })) {
+                counter++;
             }
-
+            return counter;
         }
 
-        myprint(counter);
+        if (remaining_string.size() < std::accumulate(remaining_groups.begin(), remaining_groups.end(), 0ll)) {
+            return counter;
+        }
+
+        remaining_string = strip_dots(remaining_string);
+        if (remaining_string.empty()) {
+            return counter;
+        }
+
+        // if remaining string starts with ? - we cannot check the group matching
+        // we build two substitutes
+        if (remaining_string.starts_with('?')) {
+            remaining_string.erase(remaining_string.begin());
+
+            PoolWork first{"#" + remaining_string, remaining_groups};
+            PoolWork second{remaining_string, remaining_groups};
+
+            process_new_item(second);
+            process_new_item(first);
+            return counter;
+        }
+
+        // if remaining string starts with # - let's try to match the group
+        auto first_remaining_group = remaining_groups.front();
+        remaining_groups.erase(remaining_groups.begin());
+
+        if (remaining_string.size() < first_remaining_group) {
+            return counter;
+        }
+
+        bool matched = true;
+        if ((remaining_string.size() == first_remaining_group) ||
+            (remaining_string.size() > first_remaining_group &&
+             (remaining_string.at(first_remaining_group) == '.') ||
+             (remaining_string.at(first_remaining_group) == '?'))) {
+            for (ll i = 0; i < first_remaining_group; i++) {
+                if (remaining_string.at(i) != '#' && remaining_string.at(i) != '?') {
+                    matched = false;
+                    break;
+                }
+            }
+        } else {
+            matched = false;
+        }
+
+        if (matched) {
+            PoolWork new_item;
+            if (remaining_string.size() > first_remaining_group) {
+                new_item = {strip_dots(remaining_string.substr(first_remaining_group + 1)), remaining_groups};
+            } else {
+                new_item = {strip_dots(remaining_string.substr(first_remaining_group)), remaining_groups};
+            }
+            process_new_item(new_item);
+        }
+
         return counter;
     }
 
@@ -1577,24 +1577,12 @@ if (!validate_group((idx))) {                                                   
 
 }
 
-int main12(int argc, char *argv[]) {
-
-    ASSERT_EQ(argc, 2);
-    ll slice = strtoll(argv[1], nullptr, 10);
-    std::cout << "Process [" << 100 * slice << ", " << 100 * (slice + 1) << ")" << std::endl;
-//
+int main12() {
     int64_t result1 = 0;
     int64_t result5 = 0;
 
-
-    std::vector<std::vector<ll>> results(input.size());
-    ll nr = 0;
-//    for (const auto &[line, groups]: input) {
-
-    for (ll line_nr = 100 * slice; line_nr < 100 * (slice + 1); line_nr++) {
-        const auto &[line, groups] = input.at(line_nr);
-        std::cout << nr << "/" << input.size() - 1 << std::endl;
-        for (ll copies: {1, 2, 3, 5}) {
+    for (const auto &[line, groups]: input) {
+        for (ll copies: {1, 5}) {
             auto total_line = line;
             for (ll i = 0; i < copies - 1; i++) {
                 total_line += '?';
@@ -1606,36 +1594,16 @@ int main12(int argc, char *argv[]) {
                 total_groups.insert(total_groups.end(), groups.begin(), groups.end());
             }
 
-            if (copies != 5) {
-                auto result = get_combinations2(total_line, total_groups);
-                if (copies == 1) {
-                    result1 += result;
-                }
-                results.at(nr).push_back(result);
-            } else {
-                ll k_1_div = results.at(nr).at(1) / results.at(nr).at(0);
-                ll k_1_mod = results.at(nr).at(1) % results.at(nr).at(0);
-                ll k_2_div = results.at(nr).at(2) / results.at(nr).at(1);
-                ll k_2_mod = results.at(nr).at(2) % results.at(nr).at(1);
-
-                if (k_1_div == k_2_div && k_1_mod == 0 && k_2_mod == 0) {
-                    ll result = results.at(nr).at(2) * k_1_div * k_1_div;
-                    std::cout << "Extrapolated: " << result << std::endl;
-                    result5 += result;
-                } else {
-                    std::cout << "Bruteforce" << std::endl;
-                    ll result = get_combinations2(total_line, total_groups);
-                    result5 += result;
-                }
+            auto result = get_combinations2(total_line, total_groups);
+            if (copies == 1) {
+                result1 += result;
+            } else if (copies == 5) {
+                result5 += result;
             }
-
         }
-
-
-        nr++;
     }
 
     ASSERT_EQ(result1, 7633);
-    myprint(result5);
+    ASSERT_EQ(result5, 23903579139437);
     return 0;
 }
