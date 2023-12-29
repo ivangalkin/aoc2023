@@ -23,11 +23,11 @@ add_executable(aoc2023
 #        16.cpp
 #        17.cpp
 #        18.cpp
-#        19.cpp
+        19.cpp
 #        20.cpp
 #        21.cpp
 #        22.cpp
 #        23.cpp
 #        24.cpp
-        25.cpp
+#        25.cpp
         )
