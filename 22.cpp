@@ -1313,15 +1313,16 @@ namespace {
                 break;
             }
 
-            std::set<Shape *> intersecting_shapes;
+            bool found_intersecting_shapes = false;
             for (ll x = maybe_shape.getMinX(); x <= maybe_shape.getMaxX(); x++) {
                 for (ll y = maybe_shape.getMinY(); y <= maybe_shape.getMaxY(); y++) {
                     if (auto grid_it = grid.find({x, y, min_z}); grid_it != grid.end()) {
-                        intersecting_shapes.insert(grid_it->second);
+                        found_intersecting_shapes = true;
+                        break;
                     }
                 }
             }
-            if (!intersecting_shapes.empty()) {
+            if (found_intersecting_shapes) {
                 break;
             }
             shape = maybe_shape;
@@ -1356,8 +1357,6 @@ int main22() {
     int64_t result0 = 0;
     int64_t result1 = 0;
 
-    myprint(input.size());
-
     std::sort(input.begin(), input.end(), [](const auto &shape1, const auto &shape2) {
         return shape1.getMinZ() < shape2.getMinZ();
     });
@@ -1383,21 +1382,6 @@ int main22() {
 
     myprint(result0);
     ASSERT_EQ(result0, 403);
-
-    for (auto &shape: input) {
-        if (shape.shapes_above.empty()) {
-            result0++;
-            continue;
-        }
-        // all shapes above have more than 1 shape below
-        bool safe = true;
-        for (auto *shape_above: shape.shapes_above) {
-            safe &= shape_above->shapes_under.size() > 1;
-        }
-        if (safe) {
-            result0++;
-        }
-    }
 
     for (auto &shape: input) {
         std::set<const Shape *> removed;
